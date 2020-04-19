@@ -6,7 +6,9 @@ module top (
 	output SEN_SPC,
 	input SEN_SDO,
 	output SEN_CS,
-	output [8:1] PIO
+	output [8:1] PIO,
+	input UART_RXD,
+	output UART_TXD
 );
 
 parameter div_coef = 32'd5000;
@@ -25,31 +27,31 @@ wire dir;
 sequencer U1 (
 	.clk_in(CLK12M),
 	.nrst(nrst),
-	
+
 	.spi_mosi_data(spi_mosi_data),
 	.spi_miso_data(spi_miso_data),
 	.spi_nbits(spi_nbits),
-	
+
 	.spi_request(spi_request),
 	.spi_ready(spi_ready),
-	
+
 	.led_out(/*LED*/), // Just for debugging
 	.direction(dir)
 );
-	
+
 spi_master U2 (
 	.clk_in(CLK12M),
 	.nrst(nrst),
-	
+
 	.spi_sck(SEN_SPC),
 	.spi_mosi(SEN_SDI),
 	.spi_miso(SEN_SDO),
 	.spi_csn(SEN_CS),
-	
+
 	.mosi_data(spi_mosi_data),
 	.miso_data(spi_miso_data),
 	.nbits(spi_nbits),    // nbits==0 -> 1 bit transfer
-	
+
 	.request(spi_request),
 	.ready(spi_ready)
 );
@@ -59,8 +61,25 @@ assign PIO[2] = SEN_SDI;
 assign PIO[3] = SEN_SDO;
 assign PIO[4] = SEN_CS;
 
+uart #(
+	.baud_rate    (    9600), // default is 9600
+	.sys_clk_freq (12000000)  // default is 100000000
+)
+uart0(
+	.clk       (CLK12M), // The master clock for this module
+	.rst        (~nrst), // Synchronous reset
+	.rx      (UART_RXD), // Incoming serial line
+	.tx      (UART_TXD), // Outgoing serial line
+	.transmit        (), // Signal to transmit
+	.tx_byte         (), // Byte to transmit
+	.received (isrx   ), // Indicated that a byte has been received
+	.rx_byte  (rx_byte), // Byte received
+	.is_receiving    (), // Low when receive line is idle
+	.is_transmitting (),// Low when transmit line is idle
+	.recv_error      () // Indicates error in receiving packet.
+);
 
-// Frequency divider 
+// Frequency divider
 reg [31:0] divider;
 reg divider_out;
 
@@ -115,28 +134,58 @@ always @(posedge CLK12M or negedge nrst) begin
 				pos <= 4'b0;
 			end else begin
 				pos <= pos+1;
-			end	
+			end
 		end
 	end
 end
 
-wire [7:0] foo [0:15];
-assign foo[0]  = "A";
-assign foo[1]  = "R";
-assign foo[2]  = "R";
-assign foo[3]  = "O";
-assign foo[4]  = "W";
-assign foo[5]  = " ";
-assign foo[6]  = " ";
-assign foo[7]  = " ";
-assign foo[8]  = "A";
-assign foo[9]  = "R";
-assign foo[10] = "R";
-assign foo[11] = "O";
-assign foo[12] = "W";
-assign foo[13] = " ";
-assign foo[14] = " ";
-assign foo[15] = " ";
+reg [7:0] foo [0:15];
+initial begin
+	foo[0]  = "A";
+	foo[1]  = "R";
+	foo[2]  = "R";
+	foo[3]  = "O";
+	foo[4]  = "W";
+	foo[5]  = " ";
+	foo[6]  = " ";
+	foo[7]  = " ";
+	foo[8]  = "A";
+	foo[9]  = "R";
+	foo[10] = "R";
+	foo[11] = "O";
+	foo[12] = "W";
+	foo[13] = " ";
+	foo[14] = " ";
+	foo[15] = " ";
+end
+
+// Let's add the ability to change the text!
+// Note: I had to change the foo "array"
+// To be more than a bunch of assigns, above, too
+
+wire isrx;   // Uart sees something!
+wire [7:0] rx_byte;  // Uart data
+reg [3:0] fooptr=0;   // pointer into foo array
+integer i;
+
+always @(posedge CLK12M) begin
+   if (isrx)    // if you got something
+        begin
+          if (rx_byte==8'h0d)  // CR
+             fooptr <= 0;
+          else if (rx_byte==8'h1b) // ESC: clear foo
+          begin
+              fooptr <= 0;
+// Note: Verilog will unroll this at compile time
+              for (i=0;i<16;i=i+1)
+                   foo[i] <= " ";
+          end
+          else begin
+            foo[fooptr]<=rx_byte;  // store it
+            fooptr<=fooptr+1;   // natural roll over at 16
+          end
+        end
+end
 
 // Assign ROM address depending on direction
 reg [9:0] addr;

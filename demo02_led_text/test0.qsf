@@ -1,18 +1,18 @@
 # -------------------------------------------------------------------------- #
 #
 # Copyright (C) 1991-2016 Altera Corporation. All rights reserved.
-# Your use of Altera Corporation's design tools, logic functions 
-# and other software and tools, and its AMPP partner logic 
-# functions, and any output files from any of the foregoing 
-# (including device programming or simulation files), and any 
-# associated documentation or information are expressly subject 
-# to the terms and conditions of the Altera Program License 
+# Your use of Altera Corporation's design tools, logic functions
+# and other software and tools, and its AMPP partner logic
+# functions, and any output files from any of the foregoing
+# (including device programming or simulation files), and any
+# associated documentation or information are expressly subject
+# to the terms and conditions of the Altera Program License
 # Subscription Agreement, the Altera Quartus Prime License Agreement,
-# the Altera MegaCore Function License Agreement, or other 
-# applicable license agreement, including, without limitation, 
-# that your use is for the sole purpose of programming logic 
-# devices manufactured by Altera and sold by Altera or its 
-# authorized distributors.  Please refer to the applicable 
+# the Altera MegaCore Function License Agreement, or other
+# applicable license agreement, including, without limitation,
+# that your use is for the sole purpose of programming logic
+# devices manufactured by Altera and sold by Altera or its
+# authorized distributors.  Please refer to the applicable
 # agreement for further details.
 #
 # -------------------------------------------------------------------------- #
@@ -62,7 +62,7 @@ set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
 set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
 set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 set_global_assignment -name FLOW_DISABLE_ASSEMBLER OFF
-set_global_assignment -name TIMEQUEST_MULTICORNER_ANALYSIS ON
+set_global_assignment -name TIMING_ANALYZER_MULTICORNER_ANALYSIS ON
 set_global_assignment -name NUM_PARALLEL_PROCESSORS ALL
 
 #============================================================
@@ -144,16 +144,15 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to PIO[8]
 #============================================================
 # UART
 #============================================================
-set_location_assignment PIN_A4 -to BDBUS[0]
-set_location_assignment PIN_B4 -to BDBUS[1]
+set_location_assignment PIN_A4 -to UART_RXD
+set_location_assignment PIN_B4 -to UART_TXD
 set_location_assignment PIN_B5 -to BDBUS[2]
 set_location_assignment PIN_A6 -to BDBUS[3]
 set_location_assignment PIN_B6 -to BDBUS[4]
 set_location_assignment PIN_A7 -to BDBUS[5]
-# TXD : BDBUS0
-set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to BDBUS[0]
-# RXD : BDBUS1
-set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to BDBUS[1]
+
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to UART_RXD
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to UART_TXD
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to BDBUS[2]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to BDBUS[3]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to BDBUS[4]
@@ -273,7 +272,7 @@ set_location_assignment PIN_K12 -to D[10]
 set_location_assignment PIN_J10 -to D[11]
 set_location_assignment PIN_H10 -to D[12]
 #with pull-up resistors
-#set_location_assignment PIN_D13 -to D[11]  
+#set_location_assignment PIN_D13 -to D[11]
 #set_location_assignment PIN_G13 -to D[12]
 set_location_assignment PIN_H13 -to D[13]
 set_location_assignment PIN_G12 -to D[14]
@@ -330,11 +329,13 @@ set_global_assignment -name EDA_DESIGN_INSTANCE_NAME NA -section_id top_tb
 set_global_assignment -name EDA_TEST_BENCH_RUN_SIM_FOR "1 ns" -section_id top_tb
 set_global_assignment -name EDA_TEST_BENCH_MODULE_NAME top_tb -section_id top_tb
 set_global_assignment -name EDA_NATIVELINK_SIMULATION_SETUP_SCRIPT macro.do -section_id eda_simulation
+set_global_assignment -name EDA_TEST_BENCH_FILE top_tb.v -section_id top_tb
+
+set_global_assignment -name VERILOG_FILE cores/uart.v
 set_global_assignment -name VERILOG_FILE top.v
 set_global_assignment -name CDF_FILE programming_chain.cdf
 set_global_assignment -name QIP_FILE font_rom.qip
 set_global_assignment -name VERILOG_FILE spi_master.v
 set_global_assignment -name COMMAND_MACRO_FILE macro.do
-set_global_assignment -name EDA_TEST_BENCH_FILE top_tb.v -section_id top_tb
 set_global_assignment -name VERILOG_FILE sequencer.v
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
